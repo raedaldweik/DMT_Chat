@@ -127,7 +127,7 @@ hardcoded_qa = {
 }
 
 # Step 7: Build the Streamlit UI
-st.title("Flood Digital Assistant")
+st.title("AI Flood Expert")
 st.write("Ask me anything about floods in Abu Dhabi")
 
 # Initialize conversation history in Streamlit session state
