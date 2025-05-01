@@ -3,7 +3,6 @@
 
 # Step 2: Import Libraries
 import os
-import sqlite3
 import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
@@ -28,153 +27,30 @@ db = SQLDatabase(engine=engine)
 llm = ChatOpenAI(model="gpt-4", temperature=0)
 agent_executor = create_sql_agent(llm, db=db, agent_type="openai-tools", verbose=True)
 
-# Step 6: Create a Detailed Data Dictionary (for context)
+# Step 6: Create a Condensed Data Dictionary to avoid context limits
 data_dictionary = """
-### Detailed Data Dictionary for 'risk.db'
+### risk.db schema (condensed)
 
-The database contains five tables: **Risk**, **Action**, **Observation**, **Assessment**, and **Business**.
+**Tables (5):**
+1. **Risk** – risk instances  
+   - ~70 columns: IDs, names, descriptions, scores, appetite & impact codes, status, timestamps, org paths, custom fields.
 
----
+2. **Action** – action plans  
+   - ~115 columns: IDs, names, descriptions, priority, status, dates, costs, lookup keys, org/process/product paths.
 
-#### 1. Risk
-Columns:
-- SOURCE_SYSTEM_CD (TEXT)
-- RISKINSTANCE_ID (TEXT)
-- RISKINSTANCE_RK (BIGINT)
-- RISKINSTANCE_NM (TEXT)
-- RISKINSTANCE_DESC (TEXT)
-- USER_NAME_1 … USER_NAME_5 (FLOAT/TEXT)
-- CREATED_USER_NAME (TEXT)
-- CREATED_DTTM (TEXT)
-- LAST_UPDATE_USER_NAME (FLOAT)
-- RISKAPPETITECURRCD (TEXT)
-- BUSINESSIMPACTCD & BUSINESSIMPACTCD_C (TEXT)
-- OCCURENCEFREQCD & OCCURENCEFREQCD_C (TEXT)
-- RISKNATURECD & RISKNATURECD_C (TEXT)
-- STATUSCD & STATUSCD_C (TEXT)
-- IDENTIFIEDDT (DATETIME)
-- NEXTREVIEWDT, RISKAPPETITEAMT, RISKAPPETITEBASEAMT (TEXT)
-- RISKSCORE (FLOAT)
-- SOXFLG (TEXT)
-- CUSTOMUSER1 & CUSTOMUSER2 (TEXT)
-- ATTACHMENTS (FLOAT)
-- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
-- PASBL_RISK, ASMT_RISK (TEXT)
-- RISK_ISSUE (FLOAT)
-- RISK_CNTRL, RISK_CORESP, PROJECT_RISK, AE_RISK, AUPL_RISK (TEXT)
-- RISKINSTANCE_KEY (BIGINT)
-- RISKINSTANCE_COUNT (BIGINT)
-- LEGAL_ORG_PATH, MANAGEMENT_ORG_PATH, RISK_CAT_PATH (TEXT)
-- LEGAL_ORG_RK*, MANAGEMENT_ORG_RK*, RISK_CAT_RK* (TEXT)
+3. **Observation** – KRI observations  
+   - ~85 columns: IDs, names, descriptions, scales & frequencies, due/report dates, range values, flags, org & KRI links.
 
-#### 2. Action
-Columns:
-- SOURCE_SYSTEM_CD (TEXT)
-- ACTIONPLAN_ID (TEXT)
-- ACTIONPLAN_RK (BIGINT)
-- ACTIONPLAN_NM, ACTIONPLAN_DESC (TEXT)
-- USER_NAME_1 … USER_NAME_5 (TEXT/FLOAT)
-- CREATED_USER_NAME, CREATED_FROM_RK (TEXT)
-- CREATED_DTTM (DATETIME)
-- LAST_UPDATE_USER_NAME (FLOAT)
-- AP_STR_MDL_VLDTR_VERIFI (TEXT)
-- REFERENCENO (FLOAT)
-- ACTIONPLANPRIORITYTYPECD & _C (TEXT)
-- STATUSCD & STATUSCD_C (TEXT)
-- AP_DTE_CLSD_DT, COMPLETIONDT (TEXT)
-- CREATEDDT, ORIGINALTARGETDT, TARGETDT, LATESTREVISEDTARGETDT (DATETIME/TEXT)
-- ACTUALCOST (TEXT)
-- CUSTOMUSER1 (TEXT)
-- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
-- ISSUE_AP, AP_AP (TEXT)
-- AP_ASMT, CORESP_ACTIONPLAN, POLICY_AP, AUDIT_AP, BUSOBJ_AP, INSPOL_AP, PROINS_AP, ORAP_AP, AP_ESIA, X_*_ACTION, SCR_AP, etc. (FLOAT/TEXT)
-- ACTIONPLAN_KEY (BIGINT)
-- ACTIONPLAN_COUNT (BIGINT)
-- GEOGRAPHY_PATH, MANAGEMENT_ORG_PATH, PROCESS_PATH, PRODUCT_PATH, RESOURCE_DIM_PATH (TEXT)
-- GEOGRAPHY_RK*, MANAGEMENT_ORG_RK*, PROCESS_RK*, PRODUCT_RK*, RESOURCE_DIM_RK* (TEXT)
+4. **Assessment** – control/risk assessments  
+   - ~80 columns: IDs, names, descriptions, stages, statuses, start/end dates, flags, scores, org & object links.
 
-#### 3. Observation
-Columns:
-- SOURCE_SYSTEM_CD (TEXT)
-- KRIOBSERVATION_ID (TEXT)
-- KRIOBSERVATION_RK (BIGINT)
-- KRIOBSERVATION_NM, KRIOBSERVATION_DESC (TEXT)
-- USER_NAME_1 … USER_NAME_5 (FLOAT)
-- CREATED_USER_NAME, CREATED_FROM_RK (TEXT)
-- CREATED_DTTM (TEXT)
-- LAST_UPDATE_USER_NAME (FLOAT)
-- JUSTIFICATION, RESPONSESCALERANGE (TEXT)
-- KRIFREQUENCYCD & _C, KRINATURECD & _C (TEXT)
-- KRITYPECD (FLOAT) & KRITYPECD_C (TEXT)
-- SCALETYPECD & _C (TEXT)
-- STATUSCD & _C (TEXT)
-- UNITOFMEASURECD & _C (TEXT)
-- DUEDT, REPORTEDONDT (DATETIME)
-- RANGEMAX, RANGEMID1, RANGEMID2, RANGEMIN, SCORE (BIGINT)
-- BIGBADFLG, RELAXRANGEFLG (TEXT)
-- ATTACHMENTS (FLOAT)
-- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
-- GLB_PERIOD_RK & _KEY (TEXT)
-- LINK_TYPE_RK, LINK_INSTANCE_RK (TEXT)
-- BUSINESS_OBJECT_RK_*, BUSINESS_OBJECT_TYPE_NM_* (TEXT)
-- KRIOBS_OWNER_1 (TEXT)
-- KRIOBSERVATION_COUNT (BIGINT)
-- CAUSE_PATH, CONTROL_PATH, LEGAL_ORG_PATH, MANAGEMENT_ORG_PATH, PROCESS_PATH, PRODUCT_PATH, PROJECT_PATH, RESOURCE_DIM_PATH, RISK_CAT_PATH (TEXT)
-- CAUSE_RK*, CONTROL_RK*, LEGAL_ORG_RK*, MANAGEMENT_ORG_RK*, PROCESS_RK*, PRODUCT_RK*, PROJECT_RK*, RESOURCE_DIM_RK*, RISK_CAT_RK* (TEXT)
-
-#### 4. Assessment
-Columns:
-- SOURCE_SYSTEM_CD (TEXT)
-- ASSESSMENT_ID (TEXT)
-- ASSESSMENT_RK (BIGINT)
-- ASSESSMENT_NM, ASSESSMENT_DESC (TEXT)
-- USER_NAME_1 … USER_NAME_5 (TEXT/FLOAT)
-- CREATED_USER_NAME, CREATED_FROM_RK (TEXT)
-- CREATED_DTTM (TEXT)
-- LAST_UPDATE_USER_NAME (FLOAT)
-- ACTUALSTARTDTTMSTR, RATINGSTEMPLATESTR (TEXT)
-- ASBLTYPECD & _C, STAGECD & _C, STATUSCD & _C (TEXT)
-- ACTUALENDDT, ACTUALSTARTDT, DUEDT, PLANNEDENDDT, PLANNEDSTARTDT (TEXT)
-- AUTORELATEASBLSFLG, RISKDECISIONFLG (TEXT)
-- CUSTOMUSER1, CUSTOMUSER2, CUSTOMUSER3 (TEXT)
-- ATTACHMENTS (FLOAT)
-- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
-- AP_ASMT, ASMT_ASMTPD, ASMT_ANSHT, ASMT_PASBL, ASMT_ISSUE, ASMT_CORESP, ASMT_ASMT, ASMT_RISK, ASMT_CNTRL, POLICY_ASMT, CAUSE_ASMT, ASMT_CREREP (FLOAT/TEXT)
-- ASSESSMENT_KEY (BIGINT)
-- LINK_TYPE_RK, LINK_INSTANCE_RK (TEXT)
-- BUSINESS_OBJECT_RK_*, BUSINESS_OBJECT_TYPE_NM_* (TEXT)
-- ASMT_ASSESSOR_1 (TEXT)
-- ASSESSMENT_COUNT (BIGINT)
-- GEOGRAPHY_PATH, MANAGEMENT_ORG_PATH (TEXT)
-- GEOGRAPHY_RK*, MANAGEMENT_ORG_RK* (TEXT)
-
-#### 5. Business
-Columns:
-- SOURCE_SYSTEM_CD (TEXT)
-- BUSINESSIMPACTANALYSIS_ID & _RK (BIGINT)
-- BUSINESSIMPACTANALYSIS_NM (TEXT)
-- BUSINESSIMPACTANALYSIS_DESC (FLOAT)
-- USER_NAME_1 … USER_NAME_5 (FLOAT)
-- CREATED_USER_NAME, CREATED_FROM_RK (TEXT)
-- CREATED_DTTM (TEXT)
-- LAST_UPDATE_USER_NAME (FLOAT)
-- ALTLOCATION, DEPRECATEDPROCESSES, DISASTEROCCURENCE, PLANACTIVATION, RESUMEPRIMARY, TESTRESULTS (TEXT/FLOAT)
-- LOCATIONFLG & _C (TEXT/BIGINT)
-- MAO & MAO_C (TEXT)
-- P_BUS_24HRCD…P_BUS_8HRCD_C, P_FIN_1WKCD…P_FIN_72HRCD_C, P_REP_1WKCD…P_REP_8HRCD_C (TEXT/FLOAT/BIGINT)
-- RPO & RPO_C, RTO & RTO_C (TEXT/BIGINT)
-- STATUSCD & STATUSCD_C (TEXT)
-- ACTUALENDDT, ACTUALSTARTDT, DUEDT, PLANNEDENDDT, PLANNEDSTARTDT, TESTEDONDT (DATETIME)
-- TESTEDFLG (TEXT)
-- CUSTOMUSER1, CUSTOMUSER2 (TEXT)
-- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
-- PROCESS_BIA, BIA_RISKSCENARIO, SCR_BIA (FLOAT/TEXT)
-- BUSINESSIMPACTANALYSIS_KEY (BIGINT)
-- BUSINESSIMPACTANALYSIS_COUNT (BIGINT)
+5. **Business** – business impact analyses  
+   - ~90 columns: IDs, names, descriptions, impact metrics (24 hr–72 hr, RPO/RTO), statuses, dates, flags, org & BIA links.
 """
 
+# Optional: exact-match Q&A overrides
 hardcoded_qa = {
-    # add any exact-match Q&A here if you like
+    # e.g. "list all risks": "Here are the risk instances..."
 }
 
 # Step 7: Build the Streamlit UI
@@ -189,21 +65,25 @@ if "conversation" not in st.session_state:
 user_input = st.text_input("You:", key="user_input")
 
 if user_input:
+    # Combine condensed schema + user question
     query = f"{data_dictionary}\n\n{user_input}"
     try:
-        if user_input.lower().strip() in hardcoded_qa:
-            result = hardcoded_qa[user_input.lower().strip()]
+        # Check for hardcoded Q&A
+        key = user_input.lower().strip()
+        if key in hardcoded_qa:
+            result = hardcoded_qa[key]
         else:
             result = agent_executor.invoke({"input": query})["output"]
     except Exception as e:
         result = f"Error: {str(e)}"
 
-    st.session_state.conversation.append(("User", user_input))
+    # Append to session history
+    st.session_state.conversation.append(("You", user_input))
     st.session_state.conversation.append(("Assistant", result))
 
-# Display conversation
+# Display conversation history
 for speaker, message in st.session_state.conversation:
-    if speaker == "User":
+    if speaker == "You":
         st.markdown(f"**You:** {message}")
     else:
         st.markdown(f"**Assistant:** {message}")
