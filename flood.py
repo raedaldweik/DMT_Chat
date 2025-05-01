@@ -20,20 +20,23 @@ os.environ["OPENAI_API_KEY"] = api_key
 # Step 4: Initialize the SQLite Database
 db_path = "risk.db"
 engine = create_engine(f"sqlite:///{db_path}")
-db = SQLDatabase(engine=engine)
+db = SQLDatabase(
+    engine=engine,
+    include_tables=["Risk", "Action", "Observation", "Assessment", "Business"],
+    sample_rows_in_table_info=False,
+)
 
-# Step 5: Set Up the LLM Agent (it will introspect your schema automatically)
-llm = ChatOpenAI(model="gpt-4", temperature=0)
+# Step 5: Set Up the LLM Agent with the 32k-token model
+llm = ChatOpenAI(model="gpt-4-32k", temperature=0)
 agent_executor = create_sql_agent(
     llm,
     db=db,
     agent_type="openai-tools",
-    verbose=True
+    verbose=False,   # turn off verbose to avoid extra logs in context
 )
 
-# Step 6: (Optional) Very-minimal schema hint
-# You can omit this entirely if you trust the agent to read the schema.
-data_dictionary = "Tables in this database: Risk, Action, Observation, Assessment, Business."
+# Step 6: (Optional) One‐line schema hint (agent already knows the full schema)
+schema_hint = "This DB has five tables: Risk, Action, Observation, Assessment, Business."
 
 # Step 7: Build the Streamlit UI
 st.title("AI Risk Expert")
@@ -43,10 +46,8 @@ if "conversation" not in st.session_state:
     st.session_state.conversation = []
 
 user_input = st.text_input("You:", key="user_input")
-
 if user_input:
-    # Only pass a one-line schema hint plus the user’s question
-    prompt = f"{data_dictionary}\n\n{user_input}"
+    prompt = f"{schema_hint}\n\n{user_input}"
     try:
         answer = agent_executor.invoke({"input": prompt})["output"]
     except Exception as e:
