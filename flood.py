@@ -20,115 +20,167 @@ if not api_key:
 os.environ["OPENAI_API_KEY"] = api_key
 
 # Step 4: Initialize the SQLite Database
-db_path = "flood.db"  # Path to your SQLite database
+db_path = "risk.db"  # Path to your new SQLite database
 engine = create_engine(f"sqlite:///{db_path}")
 db = SQLDatabase(engine=engine)
 
 # Step 5: Set Up the LLM Agent
-# Make sure your model name is available in your environment (e.g., "gpt-4" or "gpt-3.5-turbo")
 llm = ChatOpenAI(model="gpt-4", temperature=0)
 agent_executor = create_sql_agent(llm, db=db, agent_type="openai-tools", verbose=True)
 
 # Step 6: Create a Detailed Data Dictionary (for context)
 data_dictionary = """
-### Detailed Data Dictionary for 'flood.db'
+### Detailed Data Dictionary for 'risk.db'
 
-The database contains three tables: **inundation_forecasting**, **rainfall**, and **alerts**.
-Below is a detailed breakdown of each column and their relationships.
-
----
-
-#### 1. inundation_forecasting
-- **datetime**: Timestamp indicating the date and time of the forecast (e.g. "2025-01-01 08:00:00").
-- **ht_forecast**: Numerical value representing the predicted water height or inundation level (e.g. "5.2 feet").
-- **latitude**: Geographic latitude coordinate for the forecast location (e.g. "24.4539").
-- **longitude**: Geographic longitude coordinate for the forecast location (e.g. "54.3773").
-
-**Purpose**:  
-This table is used to store predictive data for flooding. The `ht_forecast` helps determine flood severity, and the lat/long fields map exactly where the forecast is applicable.
+The database contains five tables: **Risk**, **Action**, **Observation**, **Assessment**, and **Business**.
 
 ---
 
-#### 2. rainfall
-- **precipInches**: Amount of rainfall measured in inches (e.g. "0.75").
-- **deviceId**: Unique identifier of the device recording rainfall (e.g. "R123").
-- **deviceLabel**: Human-readable label/name of the device (e.g. "Downtown Rain Gauge").
-- **region**: Region or area name associated with the device (e.g. "Abu Dhabi City Center").
-- **msr_date**: Date of the measurement (e.g. "2025-01-05").
-- **msr_time**: Time of the measurement (e.g. "14:30:00").
-- **latitude**: Geographic latitude coordinate of the device (e.g. "24.4539").
-- **longitude**: Geographic longitude coordinate of the device (e.g. "54.3773").
-- **msr_dttm**: Combined date-time of the measurement, often used for queries and analysis (e.g. "2025-01-05 14:30:00").
+#### 1. Risk
+Columns:
+- SOURCE_SYSTEM_CD (TEXT)
+- RISKINSTANCE_ID (TEXT)
+- RISKINSTANCE_RK (BIGINT)
+- RISKINSTANCE_NM (TEXT)
+- RISKINSTANCE_DESC (TEXT)
+- USER_NAME_1 … USER_NAME_5 (FLOAT/TEXT)
+- CREATED_USER_NAME (TEXT)
+- CREATED_DTTM (TEXT)
+- LAST_UPDATE_USER_NAME (FLOAT)
+- RISKAPPETITECURRCD (TEXT)
+- BUSINESSIMPACTCD & BUSINESSIMPACTCD_C (TEXT)
+- OCCURENCEFREQCD & OCCURENCEFREQCD_C (TEXT)
+- RISKNATURECD & RISKNATURECD_C (TEXT)
+- STATUSCD & STATUSCD_C (TEXT)
+- IDENTIFIEDDT (DATETIME)
+- NEXTREVIEWDT, RISKAPPETITEAMT, RISKAPPETITEBASEAMT (TEXT)
+- RISKSCORE (FLOAT)
+- SOXFLG (TEXT)
+- CUSTOMUSER1 & CUSTOMUSER2 (TEXT)
+- ATTACHMENTS (FLOAT)
+- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
+- PASBL_RISK, ASMT_RISK (TEXT)
+- RISK_ISSUE (FLOAT)
+- RISK_CNTRL, RISK_CORESP, PROJECT_RISK, AE_RISK, AUPL_RISK (TEXT)
+- RISKINSTANCE_KEY (BIGINT)
+- RISKINSTANCE_COUNT (BIGINT)
+- LEGAL_ORG_PATH, MANAGEMENT_ORG_PATH, RISK_CAT_PATH (TEXT)
+- LEGAL_ORG_RK*, MANAGEMENT_ORG_RK*, RISK_CAT_RK* (TEXT)
 
-**Purpose**:  
-This table tracks rainfall data from various devices. The `region` column can be linked to the region in alerts or used in conjunction with lat/long to match forecasting data or alerts.
+#### 2. Action
+Columns:
+- SOURCE_SYSTEM_CD (TEXT)
+- ACTIONPLAN_ID (TEXT)
+- ACTIONPLAN_RK (BIGINT)
+- ACTIONPLAN_NM, ACTIONPLAN_DESC (TEXT)
+- USER_NAME_1 … USER_NAME_5 (TEXT/FLOAT)
+- CREATED_USER_NAME, CREATED_FROM_RK (TEXT)
+- CREATED_DTTM (DATETIME)
+- LAST_UPDATE_USER_NAME (FLOAT)
+- AP_STR_MDL_VLDTR_VERIFI (TEXT)
+- REFERENCENO (FLOAT)
+- ACTIONPLANPRIORITYTYPECD & _C (TEXT)
+- STATUSCD & STATUSCD_C (TEXT)
+- AP_DTE_CLSD_DT, COMPLETIONDT (TEXT)
+- CREATEDDT, ORIGINALTARGETDT, TARGETDT, LATESTREVISEDTARGETDT (DATETIME/TEXT)
+- ACTUALCOST (TEXT)
+- CUSTOMUSER1 (TEXT)
+- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
+- ISSUE_AP, AP_AP (TEXT)
+- AP_ASMT, CORESP_ACTIONPLAN, POLICY_AP, AUDIT_AP, BUSOBJ_AP, INSPOL_AP, PROINS_AP, ORAP_AP, AP_ESIA, X_*_ACTION, SCR_AP, etc. (FLOAT/TEXT)
+- ACTIONPLAN_KEY (BIGINT)
+- ACTIONPLAN_COUNT (BIGINT)
+- GEOGRAPHY_PATH, MANAGEMENT_ORG_PATH, PROCESS_PATH, PRODUCT_PATH, RESOURCE_DIM_PATH (TEXT)
+- GEOGRAPHY_RK*, MANAGEMENT_ORG_RK*, PROCESS_RK*, PRODUCT_RK*, RESOURCE_DIM_RK* (TEXT)
 
----
+#### 3. Observation
+Columns:
+- SOURCE_SYSTEM_CD (TEXT)
+- KRIOBSERVATION_ID (TEXT)
+- KRIOBSERVATION_RK (BIGINT)
+- KRIOBSERVATION_NM, KRIOBSERVATION_DESC (TEXT)
+- USER_NAME_1 … USER_NAME_5 (FLOAT)
+- CREATED_USER_NAME, CREATED_FROM_RK (TEXT)
+- CREATED_DTTM (TEXT)
+- LAST_UPDATE_USER_NAME (FLOAT)
+- JUSTIFICATION, RESPONSESCALERANGE (TEXT)
+- KRIFREQUENCYCD & _C, KRINATURECD & _C (TEXT)
+- KRITYPECD (FLOAT) & KRITYPECD_C (TEXT)
+- SCALETYPECD & _C (TEXT)
+- STATUSCD & _C (TEXT)
+- UNITOFMEASURECD & _C (TEXT)
+- DUEDT, REPORTEDONDT (DATETIME)
+- RANGEMAX, RANGEMID1, RANGEMID2, RANGEMIN, SCORE (BIGINT)
+- BIGBADFLG, RELAXRANGEFLG (TEXT)
+- ATTACHMENTS (FLOAT)
+- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
+- GLB_PERIOD_RK & _KEY (TEXT)
+- LINK_TYPE_RK, LINK_INSTANCE_RK (TEXT)
+- BUSINESS_OBJECT_RK_*, BUSINESS_OBJECT_TYPE_NM_* (TEXT)
+- KRIOBS_OWNER_1 (TEXT)
+- KRIOBSERVATION_COUNT (BIGINT)
+- CAUSE_PATH, CONTROL_PATH, LEGAL_ORG_PATH, MANAGEMENT_ORG_PATH, PROCESS_PATH, PRODUCT_PATH, PROJECT_PATH, RESOURCE_DIM_PATH, RISK_CAT_PATH (TEXT)
+- CAUSE_RK*, CONTROL_RK*, LEGAL_ORG_RK*, MANAGEMENT_ORG_RK*, PROCESS_RK*, PRODUCT_RK*, PROJECT_RK*, RESOURCE_DIM_RK*, RISK_CAT_RK* (TEXT)
 
-#### 3. alerts
-- **alertType**: Type of alert (e.g. "Flood Warning", "Flash Flood", "High Tide").
-- **alertSubtype**: More specific subtype of the alert (e.g. "Severe", "Moderate").
-- **alertSeverity**: Severity level (e.g. "Critical", "High", "Medium", "Low").
-- **alertMessage**: Text describing the alert (e.g. "Flash Flood Watch in effect until 6 PM.").
-- **deviceId**: Device ID associated with the alert; may link to `rainfall.deviceId` if relevant.
-- **region**: Region name where the alert is applicable (e.g. "Al Nahdah").
-- **msr_dttm**: Combined date-time when the alert was issued (e.g. "2025-01-05 14:45:00").
-- **msr_date**: Date when the alert was issued (e.g. "2025-01-05").
-- **msr_time**: Time when the alert was issued (e.g. "14:45:00").
-- **msr_month**: Month of the alert, either numeric or textual (e.g. "January" or "01").
-- **Lat**: Latitude coordinate of the alert location (e.g. "24.4539").
-- **Long**: Longitude coordinate of the alert location (e.g. "54.3773").
+#### 4. Assessment
+Columns:
+- SOURCE_SYSTEM_CD (TEXT)
+- ASSESSMENT_ID (TEXT)
+- ASSESSMENT_RK (BIGINT)
+- ASSESSMENT_NM, ASSESSMENT_DESC (TEXT)
+- USER_NAME_1 … USER_NAME_5 (TEXT/FLOAT)
+- CREATED_USER_NAME, CREATED_FROM_RK (TEXT)
+- CREATED_DTTM (TEXT)
+- LAST_UPDATE_USER_NAME (FLOAT)
+- ACTUALSTARTDTTMSTR, RATINGSTEMPLATESTR (TEXT)
+- ASBLTYPECD & _C, STAGECD & _C, STATUSCD & _C (TEXT)
+- ACTUALENDDT, ACTUALSTARTDT, DUEDT, PLANNEDENDDT, PLANNEDSTARTDT (TEXT)
+- AUTORELATEASBLSFLG, RISKDECISIONFLG (TEXT)
+- CUSTOMUSER1, CUSTOMUSER2, CUSTOMUSER3 (TEXT)
+- ATTACHMENTS (FLOAT)
+- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
+- AP_ASMT, ASMT_ASMTPD, ASMT_ANSHT, ASMT_PASBL, ASMT_ISSUE, ASMT_CORESP, ASMT_ASMT, ASMT_RISK, ASMT_CNTRL, POLICY_ASMT, CAUSE_ASMT, ASMT_CREREP (FLOAT/TEXT)
+- ASSESSMENT_KEY (BIGINT)
+- LINK_TYPE_RK, LINK_INSTANCE_RK (TEXT)
+- BUSINESS_OBJECT_RK_*, BUSINESS_OBJECT_TYPE_NM_* (TEXT)
+- ASMT_ASSESSOR_1 (TEXT)
+- ASSESSMENT_COUNT (BIGINT)
+- GEOGRAPHY_PATH, MANAGEMENT_ORG_PATH (TEXT)
+- GEOGRAPHY_RK*, MANAGEMENT_ORG_RK* (TEXT)
 
-**Purpose**:  
-This table stores alerts that have been triggered, including the type of flood alert, severity, and location details.
-
----
-
-### Potential Relationships:
-1. **alerts.deviceId** ⇔ **rainfall.deviceId**:  
-   If both the `alerts` and `rainfall` tables share the same device ID, they can be joined to correlate which specific rainfall device triggered an alert.
-2. **alerts.region** ⇔ **rainfall.region**:  
-   If you want to track all alerts for a given region, you can join on the `region` column. The same can be done with `inundation_forecasting` if you assign region names consistently or rely on the lat/long proximity to match the region.
-3. **Spatial/Geographic Matching**:  
-   By comparing lat/long values in `inundation_forecasting`, `rainfall`, and `alerts`, you can determine how different meteorological or hydrological events line up in the same area.
-
----
-
-### Usage:
-Use this data dictionary to understand the purpose of each field when querying the database or building flood-related analytics.
+#### 5. Business
+Columns:
+- SOURCE_SYSTEM_CD (TEXT)
+- BUSINESSIMPACTANALYSIS_ID & _RK (BIGINT)
+- BUSINESSIMPACTANALYSIS_NM (TEXT)
+- BUSINESSIMPACTANALYSIS_DESC (FLOAT)
+- USER_NAME_1 … USER_NAME_5 (FLOAT)
+- CREATED_USER_NAME, CREATED_FROM_RK (TEXT)
+- CREATED_DTTM (TEXT)
+- LAST_UPDATE_USER_NAME (FLOAT)
+- ALTLOCATION, DEPRECATEDPROCESSES, DISASTEROCCURENCE, PLANACTIVATION, RESUMEPRIMARY, TESTRESULTS (TEXT/FLOAT)
+- LOCATIONFLG & _C (TEXT/BIGINT)
+- MAO & MAO_C (TEXT)
+- P_BUS_24HRCD…P_BUS_8HRCD_C, P_FIN_1WKCD…P_FIN_72HRCD_C, P_REP_1WKCD…P_REP_8HRCD_C (TEXT/FLOAT/BIGINT)
+- RPO & RPO_C, RTO & RTO_C (TEXT/BIGINT)
+- STATUSCD & STATUSCD_C (TEXT)
+- ACTUALENDDT, ACTUALSTARTDT, DUEDT, PLANNEDENDDT, PLANNEDSTARTDT, TESTEDONDT (DATETIME)
+- TESTEDFLG (TEXT)
+- CUSTOMUSER1, CUSTOMUSER2 (TEXT)
+- GLB_CUST_OBJ_*_RK & _KEY (TEXT)
+- PROCESS_BIA, BIA_RISKSCENARIO, SCR_BIA (FLOAT/TEXT)
+- BUSINESSIMPACTANALYSIS_KEY (BIGINT)
+- BUSINESSIMPACTANALYSIS_COUNT (BIGINT)
 """
 
-# Hardcoded Q&A for Executive-Level Queries
+# Hardcoded Q&A for Executive-Level Queries (you can adjust or extend these)
 hardcoded_qa = {
-    "which area will have a high impact for future floods": (
-        "Based on our historical data and current forecasting models, "
-        "the areas that exhibit the highest vulnerability to future flood events "
-        "are **Al Adlah**, **Al Nahdah**, **Bu Deeb**, and **Al Haffar**. "
-        "These locations consistently appear in our inundation forecasts due to "
-        "their geographical profiles and proximity to low-lying flood plains."
-    ),
-    "recommendation to reduce impact": (
-        "To mitigate the risk in these high-impact areas, we recommend an integrated approach:\n\n"
-        "1. **Infrastructure Upgrades**: Enhance and maintain drainage systems, and consider building "
-        "   protective levees or flood barriers.\n"
-        "2. **Smart Monitoring**: Install additional rainfall gauges and flood sensors for real-time monitoring.\n"
-        "3. **Urban Planning**: Implement zoning regulations to limit construction in flood-prone zones.\n"
-        "4. **Community Preparedness**: Conduct regular flood drills, ensure early-warning systems are in place, "
-        "   and provide public education on emergency response."
-    ),
-    "why are these areas impacted": (
-        "These regions are particularly vulnerable due to a combination of factors:\n\n"
-        "- **Topography**: Areas like Al Adlah and Al Nahdah have lower elevations, causing water to accumulate.\n"
-        "- **Coastal Proximity**: Bu Deeb is near a coastal plain, making it susceptible to storm surges.\n"
-        "- **Drainage and Infrastructure**: Al Haffar’s drainage systems may require updates to handle heavy rainfall.\n"
-        "- **Historical Patterns**: Data shows these areas have experienced recurring flood incidents, "
-        "   indicating underlying vulnerabilities that require focused intervention."
-    ),
+    # e.g. "which risks are highest": "Based on your data, the top risks by score are ...",
 }
 
 # Step 7: Build the Streamlit UI
-st.title("AI Flood Expert")
-st.write("Ask me anything about floods in Abu Dhabi")
+st.title("AI Risk Expert")
+st.write("Ask me anything about your risk management data")
 
 # Initialize conversation history in Streamlit session state
 if "conversation" not in st.session_state:
@@ -138,27 +190,19 @@ if "conversation" not in st.session_state:
 user_input = st.text_input("You:", key="user_input")
 
 if user_input:
-    # Convert input to lowercase for exact dictionary matching
     user_input_lower = user_input.lower().strip()
-
-    # Combine data dictionary with user query for better context
     query = f"{data_dictionary}\n\n{user_input}"
-
     try:
-        # Check if user_input is one of our hardcoded questions (exact match in lowercase)
         if user_input_lower in hardcoded_qa:
             result = hardcoded_qa[user_input_lower]
         else:
-            # If not in hardcoded Q&A, use the LLM agent to handle the query
             result = agent_executor.invoke({"input": query})["output"]
-
         st.session_state.conversation.append(("User", user_input))
         st.session_state.conversation.append(("Assistant", result))
     except Exception as e:
         st.session_state.conversation.append(("Assistant", f"Error: {str(e)}"))
-
-    # Clear the input field after submission
-    user_input = ""
+    # Clear input
+    st.session_state.user_input = ""
 
 # Display conversation history
 for speaker, message in st.session_state.conversation:
