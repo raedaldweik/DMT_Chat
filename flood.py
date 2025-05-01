@@ -20,7 +20,7 @@ if not api_key:
 os.environ["OPENAI_API_KEY"] = api_key
 
 # Step 4: Initialize the SQLite Database
-db_path = "risk.db"  # Path to your new SQLite database
+db_path = "risk.db"  # <-- switched to your risk.db
 engine = create_engine(f"sqlite:///{db_path}")
 db = SQLDatabase(engine=engine)
 
@@ -173,38 +173,35 @@ Columns:
 - BUSINESSIMPACTANALYSIS_COUNT (BIGINT)
 """
 
-# Hardcoded Q&A for Executive-Level Queries (you can adjust or extend these)
 hardcoded_qa = {
-    # e.g. "which risks are highest": "Based on your data, the top risks by score are ...",
+    # add any exact-match Q&A here if you like
 }
 
 # Step 7: Build the Streamlit UI
-st.title("AI Risk Expert")
-st.write("Ask me anything")
+st.title("Risk Digital Assistant")
+st.write("Ask me anything!")
 
-# Initialize conversation history in Streamlit session state
+# Initialize conversation history
 if "conversation" not in st.session_state:
     st.session_state.conversation = []
 
-# Input field for user query
+# Text input widget
 user_input = st.text_input("You:", key="user_input")
 
 if user_input:
-    user_input_lower = user_input.lower().strip()
     query = f"{data_dictionary}\n\n{user_input}"
     try:
-        if user_input_lower in hardcoded_qa:
-            result = hardcoded_qa[user_input_lower]
+        if user_input.lower().strip() in hardcoded_qa:
+            result = hardcoded_qa[user_input.lower().strip()]
         else:
             result = agent_executor.invoke({"input": query})["output"]
-        st.session_state.conversation.append(("User", user_input))
-        st.session_state.conversation.append(("Assistant", result))
     except Exception as e:
-        st.session_state.conversation.append(("Assistant", f"Error: {str(e)}"))
-    # Clear input
-    st.session_state.user_input = ""
+        result = f"Error: {str(e)}"
 
-# Display conversation history
+    st.session_state.conversation.append(("User", user_input))
+    st.session_state.conversation.append(("Assistant", result))
+
+# Display conversation
 for speaker, message in st.session_state.conversation:
     if speaker == "User":
         st.markdown(f"**You:** {message}")
