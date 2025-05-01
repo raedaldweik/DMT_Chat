@@ -180,7 +180,7 @@ hardcoded_qa = {
 
 # Step 7: Build the Streamlit UI
 st.title("AI Risk Expert")
-st.write("Ask me anything about your risk management data")
+st.write("Ask me anything")
 
 # Initialize conversation history in Streamlit session state
 if "conversation" not in st.session_state:
