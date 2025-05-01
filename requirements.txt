@@ -3,3 +3,9 @@ langchain-community
 langchain-openai
 sqlalchemy
 python-dotenv
+
+# you also need the core OpenAI SDK
+openai
+
+# and since you do `import pandas as pd`
+pandas
