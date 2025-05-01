@@ -34,7 +34,7 @@ db = SQLDatabase(
 )
 
 # Step 4: Set up the LLM agent
-llm = ChatOpenAI(model_name="gpt-4-32k", temperature=0.0)
+llm = ChatOpenAI(model_name="gpt-4o", temperature=0.0)
 agent_executor = create_sql_agent(
     llm=llm,
     db=db,
